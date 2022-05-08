@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.0)
+project( fft )
+find_package( OpenCV 4 REQUIRED )
+add_executable( teste low_pass_fft.cpp )
+target_link_libraries( teste ${OpenCV_LIBS} )
