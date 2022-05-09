@@ -9,14 +9,10 @@
 #include <cmath>
 #include "complexo.h"
 #include "mat.h"
+#include "array.h"
 
-/*struct complexo {
-	double real; 
-	double imag;
-};*/                               	 /* a complex number */
 
-int FFT(int dir,int m,double *x,double *y);
-
+bool FFT(int dir,int m,Array <complexo> &c);
 
 bool P2(int n, int &count,int &aux){
 
@@ -30,7 +26,6 @@ bool P2(int n, int &count,int &aux){
     return (bool)(n?!(n&(n - 1)):0);
 }
 
-
 /*-------------------------------------------------------------------------
    Perform a 2D FFT inplace given a complex 2D array
    The direction dir, 1 for forward, -1 for reverse
@@ -41,50 +36,36 @@ bool P2(int n, int &count,int &aux){
 bool FFT2D(matriz <complexo> &c,int nx,int ny,int dir){
    int i,j;
    int m,twopm;
-   double *real,*imag;
-
+   
    /* Transform the rows */
-   real = (double *)malloc(nx * sizeof(double));
-   imag = (double *)malloc(nx * sizeof(double));
-   if (real == NULL || imag == NULL)
-      return(false);
+   Array <complexo> cc(nx);
+   
    if (!P2(nx,m,twopm) || twopm != nx)
       return(false);
-   for (j=0;j<ny;j++) {
+   for (j=0;j<ny;j++) {    
       for (i=0;i<nx;i++) {
-         real[i] = c[i][j].real();
-         imag[i] = c[i][j].imag();
+         cc[i] = c[i][j];
       }
-      FFT(dir,m,real,imag);
+      FFT(dir,m,cc);
       for (i=0;i<nx;i++) {
-         c[i][j].real() = real[i];
-         c[i][j].imag() = imag[i];
+         c[i][j] = cc[i];
       }
    }
-   free(real);
-   free(imag);
-
+   
+   cc.setDim(ny);
    /* Transform the columns */
-   real = (double *)malloc(ny * sizeof(double));
-   imag = (double *)malloc(ny * sizeof(double));
-   if (real == NULL || imag == NULL)
-      return(false);
    if (!P2(ny,m,twopm) || twopm != ny)
       return(false);
    for (i=0;i<nx;i++) {
       for (j=0;j<ny;j++) {
-         real[j] = c[i][j].real();
-         imag[j] = c[i][j].imag();
+         cc[j] = c[i][j];
       }
-      FFT(dir,m,real,imag);
+      FFT(dir,m,cc);
       for (j=0;j<ny;j++) {
-         c[i][j].real() = real[j];
-         c[i][j].imag() = imag[j];
+         c[i][j] = cc[j];
       }
    }
-   free(real);
-   free(imag);
-
+   
    return(true);
 }
 
@@ -113,28 +94,28 @@ bool FFT2D(matriz <complexo> &c,int nx,int ny,int dir){
                   k=0
 */
 
+void swap(complexo &a, complexo &b){
+	complexo aux = a;
+	
+	a = b;
+	b = aux;
+}
 
-int FFT(int dir,int m,double *x,double *y){
+bool FFT(int dir,int m,Array <complexo> &c){
    long nn,i,i1,j,k,i2,l,l1,l2;
-   double c1,c2,tx,ty,t1,t2,u1,u2,z;
+   double c1,c2,t1,t2,u1,u2,z;
 
    /* Calculate the number of points */
    nn = 1;
-   for (i=0;i<m;i++)
+   for (i = 0;i < m; i++)
       nn *= 2;
 
    /* Do the bit reversal */
    i2 = nn >> 1;
    j = 0;
-   for (i=0;i<nn-1;i++) {
-      if (i < j) {
-         tx = x[i];
-         ty = y[i];
-         x[i] = x[j];
-         y[i] = y[j];
-         x[j] = tx;
-         y[j] = ty;
-      }
+   for (i=0;i<nn - 1;i++) {
+      if (i < j)
+         swap(c[i], c[j]);
       k = i2;
       while (k <= j) {
          j -= k;
@@ -152,15 +133,12 @@ int FFT(int dir,int m,double *x,double *y){
       l2 <<= 1;
       u1 = 1.0;
       u2 = 0.0;
-      for (j=0;j<l1;j++) {
-         for (i=j;i<nn;i+=l2) {
+      for (j = 0;j < l1; j++) {
+         for (i = j;i < nn; i+=l2) {
             i1 = i + l1;
-            t1 = u1 * x[i1] - u2 * y[i1];
-            t2 = u1 * y[i1] + u2 * x[i1];
-            x[i1] = x[i] - t1;
-            y[i1] = y[i] - t2;
-            x[i] += t1;
-            y[i] += t2;
+            complexo t = complexo(u1*c[i1].real() - u2*c[i1].imag(),u1*c[i1].imag() + u2*c[i1].real());
+            c[i1] = c[i] - t;
+            c[i] += t;
          }
          z =  u1 * c1 - u2 * c2;
          u2 = u1 * c2 + u2 * c1;
@@ -174,10 +152,9 @@ int FFT(int dir,int m,double *x,double *y){
 
    /* Scaling for forward transform */
    if (dir == 1) {
-      for (i=0;i<nn;i++) {
-         x[i] /= (double)nn;
-         y[i] /= (double)nn;
-      }
+      for (i=0;i<nn;i++)
+         c[i] /= (double)nn;
+         
    }
 
    return(true);
@@ -185,7 +162,6 @@ int FFT(int dir,int m,double *x,double *y){
 
 void create_highpass_filter(cv::Mat &dft_Filter, int limite){
 	cv::Mat tmp = cv::Mat(dft_Filter.rows, dft_Filter.cols, CV_64F);
-
 	cv::Point center = cv::Point(dft_Filter.rows / 2, dft_Filter.cols / 2);
 	double radius;
 
@@ -251,17 +227,11 @@ int main( int argc, char** argv ){
 	cout << Nx <<" "<<Ny<<endl;	
 	
 	Mat   fourier[] = {Mat::zeros(NFFTy,NFFTx, CV_64F),Mat::zeros(NFFTy,NFFTx, CV_64F)};
-	//BW.convertTo(fourier[0],CV_64F);
 	for(int i = 0;i < Ny;i++)
 		for(int j = 0;j < Nx;j++){
 			fourier[0].at<double>(i,j) = (double)BW.at<unsigned char>(i,j);		
 		}
 	
-	/*complexo **A;
-	A = new complexo *[NFFTy];
-  	for(int i = 0; i< NFFTy; i++) 
-		A[i] = new complexo[NFFTx];
-       */
        matriz <complexo> A(NFFTy,NFFTx);
        
 	for(int i = 0;i < NFFTy;i++)
@@ -270,17 +240,15 @@ int main( int argc, char** argv ){
 			A[i][j].imag() = 0;		
 		}
 	
-	//return(0);
-	
 	for(int i = 0;i < NFFTy;i++)
 		for(int j = 0;j < NFFTx;j++){
 			A[i][j].real() = fourier[0].at<double>(i,j);
 			A[i][j].imag() = 0;		
 		}
 		
-	//return(0);
+	
 	FFT2D(A,NFFTy,NFFTx,1);
-	//return(0);
+	
 	//-----------------------------------------
 	complexo tmp13,tmp24;
 	const int m2 = NFFTy/2, n2 = NFFTx/2;  	
@@ -301,16 +269,15 @@ int main( int argc, char** argv ){
 			fourier[0].at<double>(i,j) = A[i][j].real();
 			fourier[1].at<double>(i,j) = A[i][j].imag();		
 		}
-	//return(0);
+	
 	///-------------------------------------------------------
 	Mat filtro = fourier[0].clone();
-	create_lowpass_filter(filtro,150);	
+	create_lowpass_filter(filtro,100);	
 	fourier[0] = fourier[0].mul(filtro);
 	fourier[1] = fourier[1].mul(filtro);	
 	namedWindow( "Espectro", cv::WINDOW_AUTOSIZE );
 	Mat espectro;	
 	normalize(fourier[0],espectro, 0, 1, NORM_MINMAX);	
-	//fourier[0].convertTo(espectro,CV_8U);
         imshow( "Espectro",espectro);
 	///-------------------------------------------------------
 	for(int i = 0;i < NFFTy;i++)
@@ -330,26 +297,21 @@ int main( int argc, char** argv ){
           		A[i][k+n2]    = tmp24;
      		}
 	}
-	//return(0);
+	
 	//-----------------------------------------
 	FFT2D(A,NFFTy,NFFTx,-1);
-	//return(0);
+	
 	Mat out(Ny,Nx, CV_64F);
 	for(int i = 0;i < Ny;i++)
 		for(int j = 0;j < Nx;j++){
 			out.at<double>(i,j) = A[i][j].real();	
 		}
-	//return(0);
-	namedWindow( "Test image", cv::WINDOW_AUTOSIZE );
+	
+	namedWindow( "passa baixa FFT", cv::WINDOW_AUTOSIZE );
 	normalize(out,out, 0, 1, NORM_MINMAX);
-	//out.convertTo(out,CV_8U);
-        imshow( "Test image",out);
-	//cout << fourier[0] <<endl;
-
-	/*for(int i = 0; i< NFFTy; i++) 
-		delete[] A[i];
-	//delete[] A;*/
- 	waitKey(0);
+	
+	imshow( "Test image",out);
+	waitKey(0);
 
  	return 0;
 }
