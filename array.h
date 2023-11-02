@@ -7,7 +7,7 @@
 
 //using namespace std;
 //--------------------------------------------------------------------------------------------------------
-//definição da classe Array <Tipo de dados> genérico
+//definiï¿½ï¿½o da classe Array <Tipo de dados> genï¿½rico
 //--------------------------------------------------------------------------------------------------------
 template <typename Tipo> class Array;
 
@@ -29,21 +29,21 @@ template <typename Tipo> class Array{
 
 		Array(Tipo [],int);
 
-		//cópia do objecto
+		//cï¿½pia do objecto
 		Array(const Array<Tipo> &);
 		//destrutor
 	       ~Array(){remove();}
 
-		//métodos
-		//para variar a dimensão durante o programa (depois de declarado)
+		//mï¿½todos
+		//para variar a dimensï¿½o durante o programa (depois de declarado)
 
 		//modificar
 		void		setDim   (int);
-		void		meteAZero(int); //não sei se isto é necessário
+		void		meteAZero(int); //nï¿½o sei se isto ï¿½ necessï¿½rio
 		void		copiaPara(Array <Tipo> &);
 		void		swap(int,int);
 		void 		inverte(int,int);
-		//devolve a dimensão
+		//devolve a dimensï¿½o
 		inline  int	getDim   (){return tamanho;}
 		inline  Tipo * 	cArray  (){return array;}
 
@@ -55,12 +55,12 @@ template <typename Tipo> class Array{
 
 };
 //--------------------------------------------------------------------------------------------------------
-//Métodos Privados
+//Mï¿½todos Privados
 //--------------------------------------------------------------------------------------------------------
 template <typename Tipo> void Array<Tipo>::aloca(int tamanho){
 
 	if(!(array = new Tipo[tamanho])){ //refazer para windows
-		std::cout <<"Erro na Memória"<<std::endl;
+		std::cout <<"Erro na Memï¿½ria"<<std::endl;
 		exit(1);
 	}
 	this->tamanho=tamanho;
@@ -69,7 +69,7 @@ template <typename Tipo> void Array<Tipo>::aloca(int tamanho){
 template <typename Tipo> void Array<Tipo>::remove(){
 		if(array){
 			delete[] array;
-			array = NULL; //acho que isto não é necessário
+			array = NULL; //acho que isto nï¿½o ï¿½ necessï¿½rio
 		}
 }
 //--------------------------------------------------------------------------------------------------------
@@ -83,39 +83,39 @@ template <typename Tipo> Array<Tipo>::Array(int tamanho){
 template <typename Tipo> Array<Tipo>::Array(Tipo in[],int tamanho){
 	aloca(tamanho);
 
-	for(register int i=0;i < tamanho;i++) *(array+i) = *(in+i);
+	for(int i=0;i < tamanho;i++) *(array+i) = *(in+i);
 	this->tamanho=tamanho;
 }
-//cópia do objecto
+//cï¿½pia do objecto
 template <typename Tipo> Array<Tipo>::Array(const Array<Tipo> &in){
 
        			aloca(in.tamanho);
-       			for(register int i = 0;i < tamanho;i++) *(array+i) = *(in.array+i);
+       			for(int i = 0;i < tamanho;i++) *(array+i) = *(in.array+i);
 }
 //--------------------------------------------------------------------------------------------------------
 //Operadores
 //--------------------------------------------------------------------------------------------------------
 template <typename Tipo> Array<Tipo> Array<Tipo>::operator  = (Array <Tipo> in){
-			register Tipo *ptr1 = in.array;
+			Tipo *ptr1 = in.array;
 
-			if(this != &in){//não modifica a cópia dele mesmo
+			if(this != &in){//nï¿½o modifica a cï¿½pia dele mesmo
 				remove();
 				aloca(in.tamanho); //fica com o tamanho do outro
-				for(register Tipo *ptr = array;(ptr - array) -  tamanho;) *ptr ++ = *ptr1 ++;
+				for(Tipo *ptr = array;(ptr - array) -  tamanho;) *ptr ++ = *ptr1 ++;
 			}
 			return *this;
 }
 //--------------------------------------------------------------------------------------------------------
-//Outros Métodos
+//Outros Mï¿½todos
 //--------------------------------------------------------------------------------------------------------
 template <typename Tipo> void Array<Tipo>::meteAZero(int dim){
-			register Tipo *ptr = array;
+			Tipo *ptr = array;
 
 			for(;(ptr - array) -  dim;) *ptr ++  =  (Tipo)NULL;
 }
 //--------------------------------------------------------------------------------------------------------
 template <typename Tipo> void Array<Tipo>::copiaPara(Array <Tipo> &in){
-			register int i=0;
+			int i=0;
 
 			for(;in.tamanho-i&&tamanho-i;i++) *(in.array+i) = *(array+i);
 			for(;i<in.tamanho;) *(in.array + i++) = (Tipo)NULL;
@@ -145,7 +145,7 @@ template <typename Tipo> void Array<Tipo>::inverte(int i,int j){
 }
 
 //---------------------------------------------------------------------------------------------------------
-//Funções friend
+//Funï¿½ï¿½es friend
 //---------------------------------------------------------------------------------------------------------
 template <typename Tipo> std::ostream &operator <<(std::ostream & out, const Array<Tipo> &in){
 	out <<'(';

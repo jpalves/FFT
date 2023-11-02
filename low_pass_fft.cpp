@@ -272,7 +272,7 @@ int main( int argc, char** argv ){
 	
 	///-------------------------------------------------------
 	Mat filtro = fourier[0].clone();
-	create_lowpass_filter(filtro,100);	
+	create_lowpass_filter(filtro,15);	
 	fourier[0] = fourier[0].mul(filtro);
 	fourier[1] = fourier[1].mul(filtro);	
 	namedWindow( "Espectro", cv::WINDOW_AUTOSIZE );
